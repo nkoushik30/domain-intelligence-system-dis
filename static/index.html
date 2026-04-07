@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domain Intelligence</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-icon">
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="14" cy="14" r="13" stroke="#4f8ef7" stroke-width="2" />
+                    <ellipse cx="14" cy="14" rx="6" ry="13" stroke="#4f8ef7" stroke-width="1.5" />
+                    <line x1="1" y1="14" x2="27" y2="14" stroke="#4f8ef7" stroke-width="1.5" />
+                    <line x1="3" y1="8" x2="25" y2="8" stroke="#4f8ef7" stroke-width="1.2" stroke-dasharray="2 1" />
+                    <line x1="3" y1="20" x2="25" y2="20" stroke="#4f8ef7" stroke-width="1.2" stroke-dasharray="2 1" />
+                </svg>
+            </div>
+            <div>
+                <h1>Domain Intelligence</h1>
+                <p class="subtitle">WHOIS, DNS & IP lookup in one shot</p>
+            </div>
+        </div>
+
+        <div class="input-row">
+            <div class="input-wrapper">
+                <svg class="input-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <circle cx="7" cy="7" r="5.5" stroke="#94a3b8" stroke-width="1.5" />
+                    <line x1="11.5" y1="11.5" x2="14.5" y2="14.5" stroke="#94a3b8" stroke-width="1.5"
+                        stroke-linecap="round" />
+                </svg>
+                <input type="text" id="domainInput" placeholder="e.g. google.com" autocomplete="off" spellcheck="false">
+            </div>
+            <button id="fetchBtn" onclick="fetchData()">
+                <span id="btnText">Analyze</span>
+                <span id="btnSpinner" class="spinner hidden"></span>
+            </button>
+        </div>
+
+        <div id="errorBox" class="error-box hidden">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <circle cx="7" cy="7" r="6" stroke="#e24b4a" stroke-width="1.5" />
+                <line x1="7" y1="4" x2="7" y2="7.5" stroke="#e24b4a" stroke-width="1.5" stroke-linecap="round" />
+                <circle cx="7" cy="10" r="0.8" fill="#e24b4a" />
+            </svg>
+            <span id="errorMsg">Something went wrong.</span>
+        </div>
+
+        <div id="resultSection" class="hidden">
+            <div class="section-title">
+                <span id="resultDomain">—</span>
+                <span class="badge" id="statusBadge">Live</span>
+            </div>
+
+            <div class="cards-grid" id="cardsGrid"></div>
+
+            <div class="raw-toggle" onclick="toggleRaw()">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" id="rawArrow">
+                    <polyline points="2,4 6,8 10,4" stroke="#64748b" stroke-width="1.5" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+                <span>Raw JSON</span>
+            </div>
+            <pre id="result" class="hidden"></pre>
+        </div>
+
+        <p class="footer">Powered by domain-inteligence-system-dis · Data is fetched live</p>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+
+</html>
