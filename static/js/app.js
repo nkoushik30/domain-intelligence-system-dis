@@ -1,5 +1,11 @@
-const API_BASE = "http://127.0.0.1:8000";
+// ─── Configuration ────────────────────────────────────────────────────────────
+const API_BASE = "";
 
+// ─── Leaflet Map State ────────────────────────────────────────────────────────
+let _leafletMap = null;   // Leaflet map instance (reused across searches)
+let _leafletMarker = null;   // Current pin
+
+// ─── Icons ────────────────────────────────────────────────────────────────────
 function icon(type) {
     const icons = {
         domain: `<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="#94a3b8" stroke-width="1.3"/><ellipse cx="6.5" cy="6.5" rx="2.8" ry="5.5" stroke="#94a3b8" stroke-width="1.1"/><line x1="1" y1="6.5" x2="12" y2="6.5" stroke="#94a3b8" stroke-width="1.1"/></svg>`,
@@ -13,24 +19,39 @@ function icon(type) {
     return icons[type] || "";
 }
 
+// ─── Utilities ────────────────────────────────────────────────────────────────
 function val(v) {
     return (v && v !== "N/A" && v !== "null" && v !== "undefined") ? v : "—";
 }
 
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+}
+
+function getNS(data) {
+    const raw = data.name_servers || data.nameservers || data.ns || [];
+    if (Array.isArray(raw)) return raw.filter(Boolean).slice(0, 8);
+    if (typeof raw === "string") return raw.split(/[\s,]+/).filter(Boolean).slice(0, 8);
+    return [];
+}
+
+// ─── Cards ────────────────────────────────────────────────────────────────────
 function buildCards(data) {
     const grid = document.getElementById("cardsGrid");
     grid.innerHTML = "";
 
+
+    
     const cards = [
-        { label: "IP Address", key: "ip", icon: "ip", mono: true },
         { label: "Country", key: "country", icon: "location" },
         { label: "City / Region", key: "_city", icon: "location" },
         { label: "ISP / Org", key: "org", icon: "org" },
-        { label: "Registrar", key: "registrar", icon: "registrar" },
-        { label: "Created", key: "creation_date", icon: "date" },
-        { label: "Expires", key: "expiry_date", icon: "date" },
         { label: "Status", key: "status", icon: "registrar" },
     ];
+
 
     if (data.city || data.region) {
         data._city = [data.city, data.region].filter(Boolean).join(", ");
@@ -60,33 +81,103 @@ function buildCards(data) {
     }
 }
 
-function getNS(data) {
-    const raw = data.name_servers || data.nameservers || data.ns || [];
-    if (Array.isArray(raw)) return raw.filter(Boolean).slice(0, 8);
-    if (typeof raw === "string") return raw.split(/[\s,]+/).filter(Boolean).slice(0, 8);
-    return [];
+// ─── Map ──────────────────────────────────────────────────────────────────────
+/**
+ * Initialise or update the Leaflet map for the given coordinates.
+ * Safe to call multiple times — re-uses the same map instance.
+ *
+ * @param {number} lat
+ * @param {number} lon
+ * @param {object} data  - Full API response (used for the popup label)
+ */
+function initMap(lat, lon, data) {
+    // Validate coords before touching Leaflet
+    if (lat == null || lon == null || isNaN(lat) || isNaN(lon)) {
+        showMapError("No geolocation data available for this domain.");
+        return;
+    }
+
+    hideMapError();
+
+    const mapEl = document.getElementById("leafletMap");
+    const latlng = [lat, lon];
+
+    // Build a human-readable popup line
+    const label = [data.city, data.region, data.country]
+        .filter(Boolean).join(", ") || "Unknown location";
+
+    // ── First run: create the map ────────────────────────────────────────────
+    if (!_leafletMap) {
+        mapEl.style.display = "block";
+
+        _leafletMap = L.map("leafletMap", {
+            zoomControl: true,
+            scrollWheelZoom: false,   // avoids accidental scroll-hijack
+            attributionControl: true,
+        }).setView(latlng, 12);
+
+        // OpenStreetMap tiles (free, no API key)
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            maxZoom: 18,
+        }).addTo(_leafletMap);
+
+        _leafletMarker = L.marker(latlng).addTo(_leafletMap);
+
+    } else {
+        // ── Subsequent searches: move existing map ───────────────────────────
+        _leafletMap.setView(latlng, 12);
+        _leafletMarker.setLatLng(latlng);
+    }
+
+    // Popup content
+    const popupHtml = `
+        <div style="font-family:'Segoe UI',sans-serif;font-size:12px;line-height:1.6">
+            <strong style="font-size:13px">${escapeHtml(data.domain || "")}</strong><br>
+            <span style="color:#64748b">${escapeHtml(data.ip || "")}</span><br>
+            <span>${escapeHtml(label)}</span>
+        </div>`;
+    _leafletMarker.bindPopup(popupHtml, { maxWidth: 200 }).openPopup();
+
+    // Update the map section header label
+    document.getElementById("mapLabel").textContent =
+        `Server Location — ${label}`;
+
+    // Fix tile rendering when the container was hidden on init
+    setTimeout(() => _leafletMap.invalidateSize(), 200);
 }
 
-function escapeHtml(str) {
-    return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
+// ─── Map UI Helpers ───────────────────────────────────────────────────────────
+function showMapLoader(visible) {
+    document.getElementById("map-loader").classList.toggle("hidden", !visible);
+    if (visible) document.getElementById("leafletMap").style.display = "none";
 }
 
+function showMapError(msg) {
+    const el = document.getElementById("map-error");
+    el.textContent = msg;
+    el.classList.remove("hidden");
+    document.getElementById("leafletMap").style.display = "none";
+}
+
+function hideMapError() {
+    document.getElementById("map-error").classList.add("hidden");
+    document.getElementById("leafletMap").style.display = "block";
+}
+
+// ─── Button / Form Helpers ────────────────────────────────────────────────────
 function setLoading(on) {
     const btn = document.getElementById("fetchBtn");
     const txt = document.getElementById("btnText");
     const spin = document.getElementById("btnSpinner");
     btn.disabled = on;
-    txt.textContent = on ? "Analyzing..." : "Analyze";
+    txt.textContent = on ? "Analyzing…" : "Analyze";
     spin.classList.toggle("hidden", !on);
 }
 
 function showError(msg) {
-    const box = document.getElementById("errorBox");
     document.getElementById("errorMsg").textContent = msg;
-    box.classList.remove("hidden");
+    document.getElementById("errorBox").classList.remove("hidden");
 }
 
 function hideError() {
@@ -94,12 +185,11 @@ function hideError() {
 }
 
 function toggleRaw() {
-    const pre = document.getElementById("result");
-    const arrow = document.getElementById("rawArrow");
-    pre.classList.toggle("hidden");
-    arrow.classList.toggle("open");
+    document.getElementById("result").classList.toggle("hidden");
+    document.getElementById("rawArrow").classList.toggle("open");
 }
 
+// ─── Main Fetch ───────────────────────────────────────────────────────────────
 async function fetchData() {
     const domainInput = document.getElementById("domainInput");
     const domain = domainInput.value.trim();
@@ -117,11 +207,16 @@ async function fetchData() {
 
     hideError();
     setLoading(true);
-    document.getElementById("resultDomain").textContent = "Fetching...";
+    showMapLoader(true);
+
+    document.getElementById("resultDomain").textContent = "Fetching…";
     document.getElementById("resultSection").classList.remove("hidden");
+    document.getElementById("mapSection").classList.remove("hidden");
 
     try {
-        const response = await fetch(`${API_BASE}/api/track?domain=${encodeURIComponent(domain)}`);
+        const response = await fetch(
+            `${API_BASE}/api/track?domain=${encodeURIComponent(domain)}`
+        );
 
         if (!response.ok) {
             const errData = await response.json().catch(() => ({}));
@@ -129,22 +224,42 @@ async function fetchData() {
         }
 
         const data = await response.json();
+        console.log(data);
+        console.log(data[0].location.lat);
+        
 
+        // ── Populate UI ──────────────────────────────────────────────────────
         document.getElementById("resultDomain").textContent = domain;
         document.getElementById("result").textContent = JSON.stringify(data, null, 2);
-        buildCards(data);
 
+        buildCards(data[0].location);
+
+        // ── Map ──────────────────────────────────────────────────────────────
+        showMapLoader(false);
+        const item = data[0];
+
+        const lat = item.location?.lat;
+        const lon = item.location?.lon;
+
+        initMap(lat, lon, {
+            ...item,
+            city: item.location?.city,
+            region: item.location?.regionName,
+            country: item.location?.country
+        });        // Reset raw JSON accordion
         document.getElementById("result").classList.add("hidden");
         document.getElementById("rawArrow").classList.remove("open");
-        document.getElementById("resultSection").classList.remove("hidden");
 
     } catch (error) {
-        showError(error.message || "Could not connect to the API. Make sure FastAPI is running.");
+        showMapLoader(false);
+        showMapError("Map unavailable — check if the backend is running.");
+        showError(error.message || "Could not connect to the API. Is FastAPI running?");
     } finally {
         setLoading(false);
     }
 }
 
+// ─── Enter Key ────────────────────────────────────────────────────────────────
 document.getElementById("domainInput").addEventListener("keydown", e => {
     if (e.key === "Enter") fetchData();
 });
