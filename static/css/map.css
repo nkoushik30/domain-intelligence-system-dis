@@ -1,0 +1,53 @@
+/* ─── Map Container Fix ───────────────────────────── */
+
+#mapSection {
+    margin-top: 20px;
+}
+
+/* CRITICAL: Map must have height */
+#leafletMap {
+    height: 400px;
+    width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    z-index: 1;
+}
+
+/* Loader styling */
+.map-loader {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 20px;
+    font-size: 14px;
+    color: #64748b;
+}
+
+.map-loader-spin {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #e2e8f0;
+    border-top: 2px solid #4f8ef7;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Error box */
+.map-error {
+    padding: 15px;
+    color: #e24b4a;
+    background: #fff1f1;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+/* Hidden class safety */
+.hidden {
+    display: none !important;
+}
