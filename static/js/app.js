@@ -43,6 +43,8 @@ function buildCards(data) {
     const grid = document.getElementById("cardsGrid");
     grid.innerHTML = "";
 
+
+    
     const cards = [
         { label: "Country", key: "country", icon: "location" },
         { label: "City / Region", key: "_city", icon: "location" },
