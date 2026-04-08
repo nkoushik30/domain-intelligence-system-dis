@@ -6,13 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Domain Intelligence</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/map.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 
 <body>
     <div class="container">
+
+        <!-- ── Header ───────────────────────────────────────────────────── -->
         <div class="header">
             <div class="logo-icon">
-                <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
                     <circle cx="14" cy="14" r="13" stroke="#4f8ef7" stroke-width="2" />
                     <ellipse cx="14" cy="14" rx="6" ry="13" stroke="#4f8ef7" stroke-width="1.5" />
                     <line x1="1" y1="14" x2="27" y2="14" stroke="#4f8ef7" stroke-width="1.5" />
@@ -22,10 +26,11 @@
             </div>
             <div>
                 <h1>Domain Intelligence</h1>
-                <p class="subtitle">WHOIS, DNS & IP lookup in one shot</p>
+                <p class="subtitle">WHOIS, DNS &amp; IP lookup in one shot</p>
             </div>
         </div>
 
+        <!-- ── Search Row ────────────────────────────────────────────────── -->
         <div class="input-row">
             <div class="input-wrapper">
                 <svg class="input-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -41,6 +46,7 @@
             </button>
         </div>
 
+        <!-- ── Error Box ─────────────────────────────────────────────────── -->
         <div id="errorBox" class="error-box hidden">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <circle cx="7" cy="7" r="6" stroke="#e24b4a" stroke-width="1.5" />
@@ -50,14 +56,36 @@
             <span id="errorMsg">Something went wrong.</span>
         </div>
 
+        <!-- ── Results ───────────────────────────────────────────────────── -->
         <div id="resultSection" class="hidden">
             <div class="section-title">
                 <span id="resultDomain">—</span>
                 <span class="badge" id="statusBadge">Live</span>
             </div>
 
+            <!-- Info cards -->
             <div class="cards-grid" id="cardsGrid"></div>
 
+            <!-- Map -->
+            <div class="map-section" id="mapSection">
+                <div class="map-header">
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                        <path
+                            d="M6.5 1.5C4.57 1.5 3 3.07 3 5c0 2.62 3.5 6.5 3.5 6.5S10 7.62 10 5c0-1.93-1.57-3.5-3.5-3.5z"
+                            stroke="#4f8ef7" stroke-width="1.3" />
+                        <circle cx="6.5" cy="5" r="1.2" fill="#4f8ef7" />
+                    </svg>
+                    <span id="mapLabel">Server Location</span>
+                </div>
+                <div id="map-loader" class="map-loader hidden">
+                    <div class="map-loader-spin"></div>
+                    <span>Locating server…</span>
+                </div>
+                <div id="map-error" class="map-error hidden"></div>
+                <div id="leafletMap"></div>
+            </div>
+
+            <!-- Raw JSON toggle -->
             <div class="raw-toggle" onclick="toggleRaw()">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none" id="rawArrow">
                     <polyline points="2,4 6,8 10,4" stroke="#64748b" stroke-width="1.5" stroke-linecap="round"
@@ -68,9 +96,10 @@
             <pre id="result" class="hidden"></pre>
         </div>
 
-        <p class="footer">Powered by domain-inteligence-system-dis · Data is fetched live</p>
+        <p class="footer">Powered by domain-intelligence-system-dis · Data fetched live</p>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="js/app.js"></script>
 </body>
 
