@@ -14,8 +14,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://domain-intelligence-system-dis.vercel.app/"],
+    allow_origins=["http://localhost:5500",
+                    "http://127.0.0.1:5500/", 
+                   "https://domain-intelligence-system-dis.vercel.app/"],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Authorization", "Content-Type"],
 )
