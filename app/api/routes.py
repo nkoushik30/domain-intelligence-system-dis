@@ -1,10 +1,12 @@
 from fastapi import APIRouter, HTTPException
 from app.services.dns_service import get_ips
 from app.services.geo_service import get_location
+from app.main import limiter
 
 router = APIRouter()
 
 @router.get("/track")
+@limiter.limit("10/minute")
 async def track_domain(domain: str):
     try:
         ips = get_ips(domain)
